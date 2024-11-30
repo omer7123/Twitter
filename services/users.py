@@ -81,23 +81,20 @@ class UserService:
         }
 
     def register(self, payload: Reg, response: Response) -> UserResponse:
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
-        if re.match(pattern, payload.email):
-            if payload.password == payload.confirm_password:
-                user_id = uuid.uuid4()
-                if user_service_db.register_user(user_id, payload.username, payload.email, payload.password) == 0:
-                    token = generate_token(user_id)
-                    new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username)
-                    response.set_cookie(key="access_token", value=token, httponly=True)
+        if payload.password == payload.confirm_password:
+            user_id = uuid.uuid4()
+            if user_service_db.register_user(user_id, payload.username, payload.email, payload.password) == 0:
+                token = generate_token(user_id)
+                new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username)
+                response.set_cookie(key="access_token", value=token, httponly=True)
 
-                    return new_user
-                else:
-                    raise HTTPException(status_code=409, detail="Пользователь с таким адресом электронной почты уже зарегистрирован")
+                return new_user
             else:
-                raise HTTPException(status_code=400, detail="Пароли не совпадают!")
+                raise HTTPException(status_code=409, detail="Пользователь с таким адресом электронной почты уже зарегистрирован")
         else:
-            raise HTTPException(status_code=408, detail="Почта неверна")
+            raise HTTPException(status_code=400, detail="Пароли не совпадают!")
+
 
 
 
@@ -114,7 +111,7 @@ class UserService:
         except(Error):
             raise HTTPException(status_code=500, detail="Что-то пошло не так!")
 
-#sdfb
+
 
 
 

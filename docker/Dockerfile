@@ -10,7 +10,7 @@ RUN pip install -r requirements.txt
 COPY .. /app
 
 # Определяем переменные окружения для подключения к PostgreSQL
-ENV POSTGRES_USER=user
+ENV POSTGRES_USER=postgres
 ENV POSTGRES_PASSWORD=password
 ENV POSTGRES_DB=dbname
 ENV POSTGRES_HOST=db

@@ -54,7 +54,34 @@ class TwitServiceDB:
                 print(error)
                 return -1
 
+    def get_all_twits(self, user_id: uuid.UUID):
+        with session_factory() as session:
+            try:
+                # Получаем все твиты
+                twits = session.query(Twit).all()
 
+                response = []
+                for twit in twits:
+                    user = session.get(User, twit.author_id)  # Получаем данные об авторе твита
+
+                    # Формируем ответ в соответствии с Pydantic моделью
+                    twit_response = CreateTwitResponse(
+                        id=twit.id,
+                        title=twit.title,
+                        date=twit.date,
+                        description=twit.description,
+                        count_like=twit.count_like,
+                        author_id=str(twit.author_id),
+                        author_name=user.username,
+                        author_email=user.email,
+                        authors_like=[str(uuid) for uuid in twit.authors_like],  # Преобразуем UUID в строки
+                    )
+                    response.append(twit_response)
+
+                return response  # FastAPI автоматически сериализует этот список в JSON
+            except Exception as error:
+                print(error)
+                return JSONResponse(content={"error": str(error)}, status_code=500)
 
 
 

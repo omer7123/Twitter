@@ -15,3 +15,11 @@ router = APIRouter()
 def create_twit(data: CreateTwit, access_token: str = Cookie(None)):
     return twit_service.create_twit(data, access_token)
 
+
+@router.get(
+    "/twits",
+    response_model=list[CreateTwitResponse]
+)
+def get_all_twits(access_token: str = Cookie(None)):
+    return twit_service.get_twits(access_token)
+

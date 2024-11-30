@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from api import router
 from app.app import app
@@ -15,3 +16,5 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"]
 )
+if __name__ == '__main__':
+    uvicorn.run("main:app", reload=True)

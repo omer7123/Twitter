@@ -20,6 +20,8 @@ class User(Base):
     first_name: Mapped[str]
     last_name: Mapped[str]
 
+    image_url: Mapped[str] = mapped_column(String, nullable=True)
+
 class Twit(Base):
     __tablename__ = "twit"
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
@@ -28,5 +30,4 @@ class Twit(Base):
     date: Mapped[str]
     title: Mapped[str]
     description: Mapped[str]
-    count_like: Mapped[int]
     authors_like: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID))

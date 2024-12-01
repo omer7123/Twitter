@@ -1,4 +1,4 @@
-from typing import re
+
 
 from schemas.users import Creds, Reg, ResetPassword, UpdateUser, UserResponse, UserData
 from database.services.users import user_service_db
@@ -111,9 +111,9 @@ class UserService:
         except(Error):
             raise HTTPException(status_code=500, detail="Что-то пошло не так!")
 
-
-
-
+    def upload_image(self, file, access_token):
+        token_data = check_token(access_token)
+        return user_service_db.upload_image(file, token_data['user_id'])
 
 
 user_service: UserService = UserService()

@@ -12,17 +12,52 @@ class CreateTwit(pydantic.BaseModel):
     description: str
 
 
+class EditTwit(pydantic.BaseModel):
+    id: uuid.UUID
+    title: str
+    date: str
+    description: str
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+
+class TwitBaseSchema(pydantic.BaseModel):
+    id: uuid.UUID
+    title: str
+    date: str
+    count_like: int
+    author_name: str
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+
+class UserBaseForLikeSchema(pydantic.BaseModel):
+    id: uuid.UUID
+    username: str
+
+    class Config:
+        from_attributes = True
+
+
 class CreateTwitResponse(pydantic.BaseModel):
     id: uuid.UUID
     title: str
     date: str
     description: str
     count_like: int
-    author_id: str
+    author_id: uuid.UUID
     author_name: str
     author_email: str
-    authors_like: list[uuid.UUID]
+    authors_like: list[UserBaseForLikeSchema]
 
     class Config:
+        orm_mode = True
         from_attributes = True
+
+
+
 

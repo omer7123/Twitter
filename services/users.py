@@ -56,11 +56,12 @@ class UserService:
             print(user)
             token = generate_token(user.id)
             response.set_cookie(key="access_token", value=token, httponly=True)
-
+            user_service_db.add_token_db(user.id, token)
             return {
                 "user_id": user.id,
                 "email": user.email,
-                "username": user.username
+                "username": user.username,
+                "token": token
             }
          else:
              raise HTTPException(status_code=404, detail="Пользователя с такими данными не найдено!")
@@ -77,7 +78,8 @@ class UserService:
         return {
             "user_id": user.id,
             "email": user.email,
-            "username": user.username
+            "username": user.username,
+            "token": token
         }
 
     def register(self, payload: Reg, response: Response) -> UserResponse:
@@ -86,7 +88,7 @@ class UserService:
             user_id = uuid.uuid4()
             if user_service_db.register_user(user_id, payload.username, payload.email, payload.password) == 0:
                 token = generate_token(user_id)
-                new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username)
+                new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username, token = token)
                 response.set_cookie(key="access_token", value=token, httponly=True)
 
                 return new_user

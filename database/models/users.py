@@ -31,3 +31,12 @@ class Twit(Base):
     title: Mapped[str]
     description: Mapped[str]
     authors_like: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID))
+
+
+class Token(Base):
+    __tablename__ = "token"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    token: Mapped[str]
+    exp_date: Mapped[datetime.datetime]

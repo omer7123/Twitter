@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException
 import uuid
 from datetime import datetime
 
-from database.models.users import User
+from database.models.users import User, Token
 
 UPLOAD_FOLDER = "/app/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -97,5 +97,33 @@ class UserServiceDB:
                 except Exception as e:
                     raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
 
+    def get_user_by_token(self, token_id):
+        with session_factory() as session:
+            try:
+                token = session.query(Token).filter_by(token=token_id)
+                user_id = token[0].user_id
+                user = session.query(User).filter_by(id=user_id).one()
+                if user:
+                    return user
+                else:
+                    return 0
+            except (Exception, Error) as error:
+                print(error)
+                return 0
+
+    def add_token_db(self, id, token):
+        with session_factory() as session:
+            try:
+                token = Token(id=uuid.uuid4(),
+                              user_id=id,
+                              token=token,
+                              exp_date=func.now(),
+                              )
+                session.add(token)
+                session.commit()
+                return 0
+            except (Exception, Error) as error:
+                raise HTTPException(status_code=403,
+                                    detail="У вас недостаточно прав для выполнения данной операции!")
 
 user_service_db: UserServiceDB = UserServiceDB()

@@ -22,6 +22,7 @@ class UserResponse(pydantic.BaseModel):
     user_id: uuid.UUID
     email: str
     username: str
+    token: str
 
 
 class ResetPassword(pydantic.BaseModel):

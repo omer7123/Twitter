@@ -19,8 +19,19 @@ class User(Base):
     hobby: Mapped[str]
     first_name: Mapped[str]
     last_name: Mapped[str]
+    image_url: Mapped[str]
 
-    image_url: Mapped[str] = mapped_column(String, nullable=True)
+
+class Comment(Base):
+    __tablename__ = "comment"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    title: Mapped[str]
+    date: Mapped[str]
+    author_id: Mapped[uuid.UUID]
+    author_name: Mapped[str]
+    author_image: Mapped[str]
+    twit_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("twit.id", ondelete="CASCADE"))
+
 
 class Twit(Base):
     __tablename__ = "twit"
@@ -31,6 +42,7 @@ class Twit(Base):
     title: Mapped[str]
     description: Mapped[str]
     authors_like: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID))
+    comments = relationship("Comment", cascade="all, delete-orphan")
 
 
 class Token(Base):

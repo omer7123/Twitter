@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Cookie
 from uuid import UUID
 
-from schemas.Twit import CreateTwit, CreateTwitResponse, TwitBaseSchema
+from schemas.Twit import CreateTwit, CreateTwitResponse, TwitBaseSchema, TwitGetDetail
 from services.twit import twit_service
 
 from starlette.responses import JSONResponse, Response
@@ -32,7 +32,7 @@ def get_all_twits(access_token: str = Cookie(None)):
 @router.get(
     "/twit/{id}",
     tags=["Twits"],
-    response_model=CreateTwitResponse
+    response_model=TwitGetDetail
 )
 def get_twit_by_id(id: UUID, access_token: str = Cookie(None)):
     return twit_service.get_twit_by_id(access_token, id)

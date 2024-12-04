@@ -91,6 +91,7 @@ class UserService:
                 new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username, token = token)
                 response.set_cookie(key="access_token", value=token, httponly=True)
 
+                user_service_db.add_token_db(user_id, token)
                 return new_user
             else:
                 raise HTTPException(status_code=409, detail="Пользователь с таким адресом электронной почты уже зарегистрирован")

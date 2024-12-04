@@ -17,6 +17,15 @@ class Reg(pydantic.BaseModel):
     confirm_password: str
 
 
+class UpdateUserSchema(pydantic.BaseModel):
+    username: str
+    email: str
+    city: str
+    hobby: str
+    first_name: str
+    last_name: str
+
+
 class UserResponse(pydantic.BaseModel):
     user_id: uuid.UUID
     email: str

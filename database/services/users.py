@@ -10,7 +10,7 @@ from starlette.responses import JSONResponse
 
 from database.database import session_factory
 from database.models.users import User, Token
-from schemas.users import TwitForUserData, UserData
+from schemas.users import TwitForUserData, UserData, UpdateUserSchema
 
 UPLOAD_FOLDER = "/app/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -153,7 +153,49 @@ class UserServiceDB:
                 return resp
             except(Exception, Error) as err:
                 raise HTTPException(status_code=403,
-                                    detail=err)
+                                    detail="Непредвиденная ошибка")
 
+    def update_user(self, user_id, data: UpdateUserSchema):
+        with session_factory() as session:
+            try:
+                user_db = session.query(User).filter(User.id == user_id).first()
+                if not user_db:
+                    raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+                user_db.username = data.username
+                user_db.email = data.email
+                user_db.city = data.city
+                user_db.first_name = data.first_name
+                user_db.hobby = data.hobby
+                user_db.last_name = data.last_name
+
+                session.commit()
+
+                twits_data = [
+                    TwitForUserData(
+                        id=twit.id,
+                        title=twit.title,
+                        date=twit.date,
+                        description=twit.description,
+                        count_like=len(twit.authors_like)
+                    ) for twit in user_db.twits
+                ]
+
+                resp = UserData(
+                    id=user_db.id,
+                    username=user_db.username,
+                    email=user_db.email,
+                    city=user_db.city,
+                    hobby=user_db.hobby,
+                    first_name=user_db.first_name,
+                    last_name=user_db.last_name,
+                    image_url=user_db.image_url,
+                    twits=twits_data
+                )
+
+                return resp
+            except(Exception, Error) as err:
+                raise HTTPException(status_code=403,
+                                    detail="Непредвиденная ошибка")
 
 user_service_db: UserServiceDB = UserServiceDB()

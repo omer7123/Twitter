@@ -1,6 +1,6 @@
 
 
-from schemas.users import Creds, Reg, UserResponse, UserData
+from schemas.users import Creds, Reg, UserResponse, UserData, UpdateUserSchema
 from database.services.users import user_service_db
 
 from services.auth import generate_token
@@ -88,18 +88,9 @@ class UserService:
 
 
 
-    # def update_user(self, payload: UpdateUser, access_token):
-    #     token_data = check_token(access_token)
-    #
-    #     try:
-    #         if (21 > payload.type) and (payload.type > 0):
-    #             user_service_db.update_user_db(token_data['user_id'], payload.username, payload.gender, payload.birth_date,
-    #                                             payload.request, payload.city, payload.description, payload.department, payload.type)
-    #             return "Successfully"
-    #         else:
-    #             raise HTTPException(status_code=400, detail="Тип пользователя введен неверно!")
-    #     except(Error):
-    #         raise HTTPException(status_code=500, detail="Что-то пошло не так!")
+    def update_user(self, data: UpdateUserSchema, access_token):
+        token_data = check_token(access_token)
+        return user_service_db.update_user(token_data['user_id'], data)
 
     def upload_image(self, file, access_token):
         token_data = check_token(access_token)

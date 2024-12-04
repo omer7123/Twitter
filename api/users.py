@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Cookie, Depends, UploadFile, File
-from schemas.users import Creds, Reg, AuthToken, UserResponse, UserData
+from schemas.users import Creds, Reg, AuthToken, UserResponse, UserData, UpdateUserSchema
 from services.users import user_service
 from starlette.responses import JSONResponse, Response
 
@@ -49,8 +49,17 @@ def get_user_data_by_token(access_token: str = Cookie(None)):
     tags=["Users"],
     response_model=UserData
 )
-def get_user_data_by_token(id: uuid.UUID):
+def get_user_data_by_id(id: uuid.UUID):
     return user_service.get_data_user_by_id(id)
+
+
+@router.put(
+    "/users/data/{id}",
+    tags=["Users"],
+    response_model=UserData
+)
+def update_user_data(data: UpdateUserSchema, access_token: str = Cookie(None)):
+    return user_service.update_user(data, access_token)
 
 
 @router.post("/upload_user_image", tags=["Users"], )

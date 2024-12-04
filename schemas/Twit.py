@@ -91,4 +91,6 @@ class TwitGetDetail(pydantic.BaseModel):
         from_attributes = True
 
 
+class StatusResp(pydantic.BaseModel):
+    status: bool
 

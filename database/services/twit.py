@@ -171,4 +171,16 @@ class TwitServiceDB:
             raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
+    def delete_twit(self, twit_id, user_id):
+        with session_factory() as session:
+            try:
+                twit_db = session.query(Twit).filter(Twit.id == twit_id).first()
+                if str(twit_db.author_id) != str(user_id):
+                    raise HTTPException(status_code=403, detail="You do not have permission to update this twit")
+
+                session.delete(twit_db)
+                session.commit()
+                return 0
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 twit_service_db: TwitServiceDB = TwitServiceDB()

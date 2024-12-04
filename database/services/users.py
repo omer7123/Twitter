@@ -1,21 +1,16 @@
 import os
+import uuid
 
-from psycopg2 import Error
-from sqlalchemy import create_engine, select, func, distinct
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, joinedload, selectinload, join, DeclarativeBase
-from typing import List
-from sqlalchemy.exc import NoResultFound
 import bcrypt
+from fastapi import HTTPException
+from psycopg2 import Error
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from starlette.responses import JSONResponse
 
-from database.database import engine, session_factory
-
-from fastapi import FastAPI, HTTPException
-import uuid
-from datetime import datetime
-
+from database.database import session_factory
 from database.models.users import User, Token
+from schemas.users import TwitForUserData, UserData
 
 UPLOAD_FOLDER = "/app/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -124,6 +119,41 @@ class UserServiceDB:
             except (Exception, Error) as error:
                 raise HTTPException(status_code=403,
                                     detail="У вас недостаточно прав для выполнения данной операции!")
+
+    def get_data_user(self, user_id):
+        with session_factory() as session:
+            try:
+
+                user_db = session.query(User).filter(User.id == user_id).options(joinedload(User.twits)).first()
+
+                if not user_db:
+                    raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+                twits_data = [
+                    TwitForUserData(
+                        id=twit.id,
+                        title=twit.title,
+                        date=twit.date,
+                        description=twit.description,
+                        count_like=len(twit.authors_like)
+                    ) for twit in user_db.twits
+                ]
+
+                resp = UserData(
+                    id=user_db.id,
+                    username=user_db.username,
+                    email=user_db.email,
+                    city=user_db.city,
+                    hobby=user_db.hobby,
+                    first_name=user_db.first_name,
+                    last_name=user_db.last_name,
+                    image_url=user_db.image_url,
+                    twits=twits_data
+                )
+                return resp
+            except(Exception, Error) as err:
+                raise HTTPException(status_code=403,
+                                    detail=err)
 
 
 user_service_db: UserServiceDB = UserServiceDB()

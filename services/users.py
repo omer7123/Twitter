@@ -1,6 +1,6 @@
 
 
-from schemas.users import Creds, Reg, ResetPassword, UpdateUser, UserResponse, UserData
+from schemas.users import Creds, Reg, UserResponse, UserData
 from database.services.users import user_service_db
 
 from services.auth import generate_token
@@ -16,28 +16,15 @@ app = FastAPI()
 
 class UserService:
 
-    def get_users(self, access_token) -> list or str:
-        token_data = check_token(access_token)
-
-        role = user_service_db.check_role(uuid.UUID(token_data['user_id']))
-
-        if role == 0:
-            items = user_service_db.get_all_users()
-            return items
-        else:
-            raise HTTPException(status_code=403, detail="У вас недостаточно прав для выполнения данной операции!")
-
-
     def get_data_user(self, access_token: str) -> UserData:
         try:
             token_data = check_token(access_token)
             user_id = uuid.UUID(token_data['user_id'])
-
             user_data = user_service_db.get_data_user(user_id)
+
             if user_data is None:
                 raise HTTPException(status_code=404, detail="Пользователь не найден")
-
-            return UserData(**user_data)
+            return user_data
 
         except ValueError as ve:
             raise HTTPException(status_code=400, detail=f"Некорректный токен: {ve}")
@@ -101,22 +88,25 @@ class UserService:
 
 
 
-    def update_user(self, payload: UpdateUser, access_token):
-        token_data = check_token(access_token)
-
-        try:
-            if (21 > payload.type) and (payload.type > 0):
-                user_service_db.update_user_db(token_data['user_id'], payload.username, payload.gender, payload.birth_date,
-                                                payload.request, payload.city, payload.description, payload.department, payload.type)
-                return "Successfully"
-            else:
-                raise HTTPException(status_code=400, detail="Тип пользователя введен неверно!")
-        except(Error):
-            raise HTTPException(status_code=500, detail="Что-то пошло не так!")
+    # def update_user(self, payload: UpdateUser, access_token):
+    #     token_data = check_token(access_token)
+    #
+    #     try:
+    #         if (21 > payload.type) and (payload.type > 0):
+    #             user_service_db.update_user_db(token_data['user_id'], payload.username, payload.gender, payload.birth_date,
+    #                                             payload.request, payload.city, payload.description, payload.department, payload.type)
+    #             return "Successfully"
+    #         else:
+    #             raise HTTPException(status_code=400, detail="Тип пользователя введен неверно!")
+    #     except(Error):
+    #         raise HTTPException(status_code=500, detail="Что-то пошло не так!")
 
     def upload_image(self, file, access_token):
         token_data = check_token(access_token)
         return user_service_db.upload_image(file, token_data['user_id'])
+
+    def get_data_user_by_id(self, id):
+        return user_service_db.get_data_user(id)
 
 
 user_service: UserService = UserService()

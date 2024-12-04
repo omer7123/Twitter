@@ -65,12 +65,12 @@ class TwitServiceDB:
                 if not twit:
                     return JSONResponse(content={"error": "Twit not found"}, status_code=404)
 
-                # Получаем автора твита
+
                 author = session.get(User, twit.author_id)
                 if not author:
                     return JSONResponse(content={"error": "Author not found"}, status_code=404)
 
-                # Преобразуем authors_like
+
                 authors_like_objects = [
                     UserBaseForLikeSchema(
                         id=user_like.id,
@@ -79,7 +79,6 @@ class TwitServiceDB:
                     for user_like in session.query(User).filter(User.id.in_(twit.authors_like))
                 ]
 
-                # Подготовка списка комментариев
                 comments = [
                     CommentBaseSchema(
                         id=comment.id,
@@ -120,8 +119,6 @@ class TwitServiceDB:
                     user = session.get(User, twit.author_id)
                     if not user:
                         continue
-
-
 
                     twit_schemas.append(
                         TwitBaseSchema(

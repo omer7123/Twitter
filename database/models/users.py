@@ -20,6 +20,7 @@ class User(Base):
     first_name: Mapped[str]
     last_name: Mapped[str]
     image_url: Mapped[str]
+    twits = relationship("Twit", cascade="all, delete-orphan")
 
 
 class Comment(Base):

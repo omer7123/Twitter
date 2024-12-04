@@ -121,6 +121,8 @@ class TwitServiceDB:
                     if not user:
                         continue
 
+
+
                     twit_schemas.append(
                         TwitBaseSchema(
                             id=twit.id,
@@ -134,6 +136,7 @@ class TwitServiceDB:
                         )
                     )
 
+                twit_schemas.reverse()
                 return twit_schemas
             except Exception as error:
                 print(f"Error in get_all_twits: {error}")

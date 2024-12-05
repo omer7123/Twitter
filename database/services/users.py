@@ -135,6 +135,7 @@ class UserServiceDB:
                         title=twit.title,
                         date=twit.date,
                         description=twit.description,
+                        liked=user_id in twit.authors_like,
                         count_like=len(twit.authors_like)
                     ) for twit in user_db.twits
                 ]

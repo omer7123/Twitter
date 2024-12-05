@@ -12,7 +12,8 @@ import uuid
 from datetime import datetime
 
 from database.models.users import User, Twit
-from schemas.Twit import CreateTwit, CreateTwitResponse, UserBaseForLikeSchema, TwitBaseSchema, TwitGetDetail, CommentBaseSchema
+from schemas.Twit import CreateTwit, CreateTwitResponse, UserBaseForLikeSchema, TwitBaseSchema, TwitGetDetail, \
+    CommentBaseSchema
 from fastapi.responses import JSONResponse
 
 
@@ -52,7 +53,7 @@ class TwitServiceDB:
                 print(error)
                 return -1
 
-    def get_twit_by_id(self, id: uuid.UUID):
+    def get_twit_by_id(self, id: uuid.UUID, user_id: uuid.UUID):
         with session_factory() as session:
             try:
                 # Загружаем твит с комментариями и автором
@@ -65,11 +66,9 @@ class TwitServiceDB:
                 if not twit:
                     return JSONResponse(content={"error": "Twit not found"}, status_code=404)
 
-
                 author = session.get(User, twit.author_id)
                 if not author:
                     return JSONResponse(content={"error": "Author not found"}, status_code=404)
-
 
                 authors_like_objects = [
                     UserBaseForLikeSchema(
@@ -91,12 +90,17 @@ class TwitServiceDB:
                     for comment in twit.comments
                 ]
 
-                # Формируем объект ответа
+                liked_db = False
+                if user_id in twit.authors_like:
+                    liked_db = True
+
+
                 twit_response = TwitGetDetail(
                     id=twit.id,
                     title=twit.title,
                     date=twit.date,
                     description=twit.description,
+                    liked=liked_db,
                     count_like=len(authors_like_objects),
                     author_id=twit.author_id,
                     author_name=author.username,
@@ -109,7 +113,7 @@ class TwitServiceDB:
                 print(f"Error in get_twit_by_id: {error}")
                 return JSONResponse(content={"error": str(error)}, status_code=500)
 
-    def get_all_twits(self):
+    def get_all_twits(self, user_id: uuid.UUID):
         with session_factory() as session:
             try:
                 twits = session.query(Twit).all()
@@ -120,12 +124,17 @@ class TwitServiceDB:
                     if not user:
                         continue
 
+                    liked_db = False
+                    if user_id in twit.authors_like:
+                        liked_db = True
+
                     twit_schemas.append(
                         TwitBaseSchema(
                             id=twit.id,
                             title=twit.title,
                             date=twit.date,
                             description=twit.description,
+                            liked=liked_db,
                             count_like=len(twit.authors_like),
                             author_id=user.id,
                             author_name=user.username,
@@ -151,11 +160,17 @@ class TwitServiceDB:
                     raise HTTPException(status_code=403, detail="You do not have permission to update this twit")
 
                 user_db = session.query(User).filter(User.id == user_id).first()
+
+                liked_db = False
+                if user_id in twit.authors_like:
+                    liked_db = True
+
                 twit_resp = TwitBaseSchema(
                     id=twit.id,
                     title=data.title,
                     date=data.date,
                     description=data.description,
+                    liked=liked_db,
                     count_like=len(twit.authors_like),
                     author_id=user_db.id,
                     author_name=user_db.username,
@@ -173,7 +188,6 @@ class TwitServiceDB:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-
     def delete_twit(self, twit_id, user_id):
         with session_factory() as session:
             try:
@@ -186,4 +200,6 @@ class TwitServiceDB:
                 return 0
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+
 twit_service_db: TwitServiceDB = TwitServiceDB()

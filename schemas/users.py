@@ -38,6 +38,7 @@ class TwitForUserData(pydantic.BaseModel):
     title: str
     date: str
     description: str
+    liked: bool
     count_like: int
 
     class Config:

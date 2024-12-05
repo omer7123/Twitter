@@ -28,6 +28,7 @@ class TwitBaseSchema(pydantic.BaseModel):
     title: str
     date: str
     description: str
+    liked: bool
     count_like: int
     author_id: uuid.UUID
     author_name: str
@@ -80,6 +81,7 @@ class TwitGetDetail(pydantic.BaseModel):
     title: str
     date: str
     description: str
+    liked: bool
     count_like: int
     author_id: uuid.UUID
     author_name: str

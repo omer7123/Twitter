@@ -153,10 +153,13 @@ class TwitServiceDB:
                 user_db = session.query(User).filter(User.id == user_id).first()
                 twit_resp = TwitBaseSchema(
                     id=twit.id,
-                    title=twit.title,
-                    date=twit.date,
+                    title=data.title,
+                    date=data.date,
+                    description=data.description,
                     count_like=len(twit.authors_like),
+                    author_id=user_db.id,
                     author_name=user_db.username,
+                    author_image=user_db.image_url
                 )
                 twit.title = data.title
                 twit.description = data.description

@@ -223,7 +223,7 @@ class UserServiceDB:
                     raise HTTPException(status_code=404, detail="Изображение не загружено")
 
                 # Возвращаем изображение
-                return FileResponse(f"{user.image_url}")
+                return FileResponse(f"{str(user.image_url)}")
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при получении изображения: {e}")

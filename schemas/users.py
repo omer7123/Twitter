@@ -33,6 +33,14 @@ class UserResponse(pydantic.BaseModel):
     token: str
 
 
+class UserResponseAuth(pydantic.BaseModel):
+    user_id: uuid.UUID
+    email: str
+    username: str
+    token: str
+    image_url: str
+
+
 class TwitForUserData(pydantic.BaseModel):
     id: uuid.UUID
     title: str
@@ -64,6 +72,7 @@ class UserData(pydantic.BaseModel):
 
 class AuthToken(pydantic.BaseModel):
     token: str
+
 
 class ImageUrlResp(pydantic.BaseModel):
     url: str

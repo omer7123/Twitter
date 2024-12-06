@@ -48,7 +48,8 @@ class UserService:
                 "user_id": user.id,
                 "email": user.email,
                 "username": user.username,
-                "token": token
+                "token": token,
+                "image_url": user.image_url
             }
          else:
              raise HTTPException(status_code=404, detail="Пользователя с такими данными не найдено!")
@@ -66,7 +67,8 @@ class UserService:
             "user_id": user.id,
             "email": user.email,
             "username": user.username,
-            "token": token
+            "token": token,
+            "image_url": user.image_url
         }
 
     def register(self, payload: Reg, response: Response) -> UserResponse:

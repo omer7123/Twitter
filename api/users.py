@@ -2,7 +2,7 @@ import shutil
 import uuid
 
 from fastapi import APIRouter, Cookie, Depends, UploadFile, File
-from schemas.users import Creds, Reg, AuthToken, UserResponse, UserData, UpdateUserSchema, ImageUrlResp
+from schemas.users import Creds, Reg, AuthToken, UserResponse, UserData, UpdateUserSchema, ImageUrlResp, UserResponseAuth
 from services.users import user_service
 from starlette.responses import JSONResponse, Response, FileResponse
 
@@ -21,7 +21,7 @@ def register_user(data: Reg, response: Response):
 @router.post(
     "/users/auth",
     tags=["Users"],
-    response_model=UserResponse,
+    response_model=UserResponseAuth,
 )
 def auth_user(data: Creds, response: Response):
     return user_service.authorization(data, response)
@@ -30,7 +30,7 @@ def auth_user(data: Creds, response: Response):
 @router.post(
     "/users/auth_token",
     tags=["Users"],
-    response_model=UserResponse,
+    response_model=UserResponseAuth,
 )
 def auth_token_user(data: AuthToken, response: Response):
     return user_service.authorization_token(data, response)

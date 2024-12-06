@@ -104,5 +104,9 @@ class UserService:
         data_token = check_token(access_token)
         return user_service_db.get_image(data_token['user_id'])
 
+    def get_image_path(self, path, access_token):
+        data_token = check_token(access_token)
+        return user_service_db.get_image_path(path)
+
 
 user_service: UserService = UserService()

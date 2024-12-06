@@ -136,7 +136,7 @@ class UserServiceDB:
                             title=twit.title,
                             date=twit.date,
                             description=twit.description,
-                            liked=user_id in str(twit.authors_like),
+                            liked=user_id in twit.authors_like,
                             count_like=len(twit.authors_like)
                         ) for twit in user_db.twits
                     ]
@@ -228,5 +228,16 @@ class UserServiceDB:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при получении изображения: {e}")
 
+    def get_image_path(self, path):
+        try:
+            with session_factory() as session:
+
+                if path== "":
+                    raise HTTPException(status_code=404, detail="Изображение не загружено")
+                # Возвращаем изображение
+                return FileResponse(f"{path}")
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при получении изображения: {e}")
 
 user_service_db: UserServiceDB = UserServiceDB()

@@ -20,7 +20,7 @@ class UserService:
         try:
             token_data = check_token(access_token)
             user_id = uuid.UUID(token_data['user_id'])
-            user_data = user_service_db.get_data_user(user_id)
+            user_data = user_service_db.get_data_user(user_id, "")
 
             if user_data is None:
                 raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -96,8 +96,9 @@ class UserService:
         token_data = check_token(access_token)
         return user_service_db.upload_image(file, token_data['user_id'])
 
-    def get_data_user_by_id(self, id):
-        return user_service_db.get_data_user(id)
+    def get_data_user_by_id(self, id, access_token):
+        data_token=check_token(access_token)
+        return user_service_db.get_data_user(id, data_token['user_id'])
 
     def get_image(self, access_token):
         data_token = check_token(access_token)

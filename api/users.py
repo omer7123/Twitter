@@ -50,8 +50,8 @@ def get_user_data_by_token(access_token: str = Cookie(None)):
     tags=["Users"],
     response_model=UserData
 )
-def get_user_data_by_id(id: uuid.UUID):
-    return user_service.get_data_user_by_id(id)
+def get_user_data_by_id(id: uuid.UUID, access_token: str = Cookie(None)):
+    return user_service.get_data_user_by_id(id, access_token)
 
 
 @router.put(

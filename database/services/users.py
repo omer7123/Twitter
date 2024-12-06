@@ -119,7 +119,7 @@ class UserServiceDB:
                 raise HTTPException(status_code=403,
                                     detail="У вас недостаточно прав для выполнения данной операции!")
 
-    def get_data_user(self, user_id):
+    def get_data_user(self, user_id, user_id_from_token):
         with session_factory() as session:
             try:
 
@@ -128,16 +128,29 @@ class UserServiceDB:
                 if not user_db:
                     raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-                twits_data = [
-                    TwitForUserData(
-                        id=twit.id,
-                        title=twit.title,
-                        date=twit.date,
-                        description=twit.description,
-                        liked=user_id in twit.authors_like,
-                        count_like=len(twit.authors_like)
-                    ) for twit in user_db.twits
-                ]
+                if user_id_from_token == "":
+
+                    twits_data = [
+                        TwitForUserData(
+                            id=twit.id,
+                            title=twit.title,
+                            date=twit.date,
+                            description=twit.description,
+                            liked=user_id in str(twit.authors_like),
+                            count_like=len(twit.authors_like)
+                        ) for twit in user_db.twits
+                    ]
+                else:
+                    twits_data = [
+                        TwitForUserData(
+                            id=twit.id,
+                            title=twit.title,
+                            date=twit.date,
+                            description=twit.description,
+                            liked=user_id_from_token in str(twit.authors_like),
+                            count_like=len(twit.authors_like)
+                        ) for twit in user_db.twits
+                    ]
 
                 resp = UserData(
                     id=user_db.id,

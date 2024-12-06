@@ -1,5 +1,3 @@
-
-
 from schemas.users import Creds, Reg, UserResponse, UserData, UpdateUserSchema
 from database.services.users import user_service_db
 
@@ -11,8 +9,8 @@ from psycopg2 import Error
 from fastapi import FastAPI, HTTPException
 from utils.token_utils import check_token
 
-
 app = FastAPI()
+
 
 class UserService:
 
@@ -33,9 +31,8 @@ class UserService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Внутренняя ошибка сервера: {e}")
 
-
     def authorization(self, payload: Creds, response: Response):
-         if user_service_db.check_user(payload.email, payload.password) == 0:
+        if user_service_db.check_user(payload.email, payload.password) == 0:
             user = user_service_db.get_user(payload.email)
             if user == -1:
                 raise HTTPException(status_code=404,
@@ -51,9 +48,8 @@ class UserService:
                 "token": token,
                 "image_url": user.image_url
             }
-         else:
-             raise HTTPException(status_code=404, detail="Пользователя с такими данными не найдено!")
-
+        else:
+            raise HTTPException(status_code=404, detail="Пользователя с такими данными не найдено!")
 
     def authorization_token(self, payload, response: Response):
 
@@ -77,18 +73,16 @@ class UserService:
             user_id = uuid.uuid4()
             if user_service_db.register_user(user_id, payload.username, payload.email, payload.password) == 0:
                 token = generate_token(user_id)
-                new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username, token = token)
+                new_user = UserResponse(user_id=user_id, email=payload.email, username=payload.username, token=token)
                 response.set_cookie(key="access_token", value=token, httponly=True)
 
                 user_service_db.add_token_db(user_id, token)
                 return new_user
             else:
-                raise HTTPException(status_code=409, detail="Пользователь с таким адресом электронной почты уже зарегистрирован")
+                raise HTTPException(status_code=409,
+                                    detail="Пользователь с таким адресом электронной почты уже зарегистрирован")
         else:
             raise HTTPException(status_code=400, detail="Пароли не совпадают!")
-
-
-
 
     def update_user(self, data: UpdateUserSchema, access_token):
         token_data = check_token(access_token)
@@ -99,15 +93,10 @@ class UserService:
         return user_service_db.upload_image(file, token_data['user_id'])
 
     def get_data_user_by_id(self, id, access_token):
-        data_token=check_token(access_token)
+        data_token = check_token(access_token)
         return user_service_db.get_data_user(id, data_token['user_id'])
 
-    def get_image(self, access_token):
-        data_token = check_token(access_token)
-        return user_service_db.get_image(data_token['user_id'])
-
-    def get_image_path(self, path, access_token):
-        data_token = check_token(access_token)
+    def get_image_path(self, path):
         return user_service_db.get_image_path(path)
 
 

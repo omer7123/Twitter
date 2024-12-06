@@ -68,15 +68,14 @@ class UserServiceDB:
 
     def upload_image(self, file, user_id):
         try:
-            # Сохраняем файл на сервере
             upload_folder = "uploads/"
-            os.makedirs(upload_folder, exist_ok=True)  # Создание папки, если ее нет
+            os.makedirs(upload_folder, exist_ok=True)
             file_path = f"{upload_folder}{uuid.uuid4()}"
 
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
-            # Сохраняем путь в базу данных
+
             with session_factory() as session:
                 user = session.query(User).filter(User.id == user_id).first()
 
@@ -211,31 +210,12 @@ class UserServiceDB:
                 raise HTTPException(status_code=403,
                                     detail="Непредвиденная ошибка")
 
-    def get_image(self, user_id):
-        try:
-            with session_factory() as session:
-                user = session.query(User).filter(User.id == user_id).first()
-
-                if not user:
-                    raise HTTPException(status_code=404, detail="Пользователь не найден")
-
-                if not user.image_url:
-                    raise HTTPException(status_code=404, detail="Изображение не загружено")
-
-                # Возвращаем изображение
-                return FileResponse(f"{str(user.image_url)}")
-
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при получении изображения: {e}")
-
     def get_image_path(self, path):
         try:
-            with session_factory() as session:
-
-                if path== "":
-                    raise HTTPException(status_code=404, detail="Изображение не загружено")
-                # Возвращаем изображение
-                return FileResponse(f"{path}")
+            if path == "":
+                raise HTTPException(status_code=404, detail="Изображение не загружено")
+            print(path)
+            return FileResponse(f"{path}")
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при получении изображения: {e}")

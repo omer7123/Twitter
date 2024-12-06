@@ -69,9 +69,5 @@ async def upload_user_image(file: UploadFile = File(...), access_token: str = Co
 
 
 @router.get("/image", tags=["Users"])
-async def get_user_image(access_token: str = Cookie(None)):
-    return user_service.get_image(access_token)
-
-@router.get("/image/{id}", tags=["Users"])
-async def get_user_image(path: str, access_token: str = Cookie(None)):
-    return user_service.get_image_path(path, access_token)
+async def get_user_image(path: str):
+    return user_service.get_image_path(path)

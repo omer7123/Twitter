@@ -99,5 +99,9 @@ class UserService:
     def get_data_user_by_id(self, id):
         return user_service_db.get_data_user(id)
 
+    def get_image(self, access_token):
+        data_token = check_token(access_token)
+        return user_service_db.get_image(data_token['user_id'])
+
 
 user_service: UserService = UserService()

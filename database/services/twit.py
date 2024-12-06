@@ -1,23 +1,29 @@
+import anyio
+from anyio import from_thread
 from psycopg2 import Error
 from sqlalchemy import create_engine, select, func, distinct
+from sqlalchemy.connectors import asyncio
 from sqlalchemy.orm import sessionmaker, joinedload, selectinload, join, DeclarativeBase
-from typing import List
+from typing import List, Dict
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
 import bcrypt
-
+from websockets import connect
 from database.database import engine, session_factory
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket
 import uuid
 from datetime import datetime
 
-from database.models.users import User, Twit
+from database.models.users import User, Twit, Comment
 from schemas.Twit import CreateTwit, CreateTwitResponse, UserBaseForLikeSchema, TwitBaseSchema, TwitGetDetail, \
-    CommentBaseSchema
+    CommentBaseSchema, CreateComment, CommentBaseRespSchema
 from fastapi.responses import JSONResponse
 
 
 class TwitServiceDB:
+
+    def __init__(self):
+        self.connections: Dict[uuid.UUID, WebSocket] = {}
 
     def create_twit(self, data: CreateTwit, user_id: uuid.UUID):
 
@@ -200,6 +206,58 @@ class TwitServiceDB:
                 return 0
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    def create_comment(self, twit_id, data: CreateComment, user_id):
+        with session_factory() as session:
+            try:
+
+                twit_db = session.query(Twit).filter(Twit.id == twit_id).first()
+                if not twit_db:
+                    raise HTTPException(status_code=404, detail="Твит не найден")
+
+
+                user_db = session.query(User).filter(User.id == user_id).first()
+                id = uuid.uuid4()
+                comment_db = Comment(
+                    id=id,
+                    title=data.title,
+                    date=data.date,
+                    author_id=user_id,
+                    author_name=user_db.username,
+                    author_image=user_db.image_url,
+                    twit_id=twit_id
+                )
+                session.add(comment_db)
+                session.commit()
+
+                comment_resp = CommentBaseRespSchema(
+                    id=id,
+                    title=data.title,
+                    date=data.date,
+                    author_id=user_id,
+                    author_name=user_db.username,
+                    author_image=user_db.image_url,
+                    twit_id=twit_id
+                )
+
+                from_thread.run(self.send_notification, twit_db.author_id, twit_id, comment_resp)
+
+                return comment_resp
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    async def send_notification(self, author_id, twit_id, comment_resp):
+        if author_id in self.connections:
+            websocket = self.connections[author_id]
+            try:
+                notification = {
+                    "type": "Новый комментарий",
+                    "twit_id": str(twit_id),
+                    "comment": comment_resp.title
+                }
+                await websocket.send_json(notification)
+            except Exception as ws_error:
+                print(f"Ошибка отправки уведомления: {ws_error}")
 
 
 twit_service_db: TwitServiceDB = TwitServiceDB()

@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Cookie
 from uuid import UUID
 
-from schemas.Twit import CreateTwit, CreateTwitResponse, TwitBaseSchema, TwitGetDetail, StatusResp
+from schemas.Twit import CreateTwit, CreateTwitResponse, TwitBaseSchema, TwitGetDetail, StatusResp, CommentBaseRespSchema, CreateComment
 from services.twit import twit_service
 
 from starlette.responses import JSONResponse, Response
@@ -54,3 +54,12 @@ def update_twit(id: UUID, data: CreateTwit, access_token: str = Cookie(None)):
 )
 def delete_twit(id: UUID, access_token: str = Cookie(None)):
     return twit_service.delete_twit(id, access_token)
+
+
+@router.post(
+    "/comment",
+    tags=["Comment"],
+    response_model=CommentBaseRespSchema
+)
+def create_comment(twit_id, data: CreateComment, access_token: str = Cookie(None)):
+    return twit_service.create_comment(twit_id, data, access_token)

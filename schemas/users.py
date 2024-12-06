@@ -64,3 +64,6 @@ class UserData(pydantic.BaseModel):
 
 class AuthToken(pydantic.BaseModel):
     token: str
+
+class ImageUrlResp(pydantic.BaseModel):
+    url: str

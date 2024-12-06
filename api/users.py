@@ -1,9 +1,10 @@
+import shutil
 import uuid
 
 from fastapi import APIRouter, Cookie, Depends, UploadFile, File
-from schemas.users import Creds, Reg, AuthToken, UserResponse, UserData, UpdateUserSchema
+from schemas.users import Creds, Reg, AuthToken, UserResponse, UserData, UpdateUserSchema, ImageUrlResp
 from services.users import user_service
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse, Response, FileResponse
 
 router = APIRouter()
 
@@ -62,6 +63,11 @@ def update_user_data(data: UpdateUserSchema, access_token: str = Cookie(None)):
     return user_service.update_user(data, access_token)
 
 
-@router.post("/upload_user_image", tags=["Users"], )
-def upload_user_image(file: UploadFile = File(...), access_token: str = Cookie(None)):
+@router.post("/upload_user_image", tags=["Users"], response_model=ImageUrlResp)
+async def upload_user_image(file: UploadFile = File(...), access_token: str = Cookie(None)):
     return user_service.upload_image(file, access_token)
+
+
+@router.get("/image", tags=["Users"])
+async def get_user_image(access_token: str = Cookie(None)):
+    return user_service.get_image(access_token)

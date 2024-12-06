@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 
 import bcrypt
@@ -6,7 +7,7 @@ from fastapi import HTTPException
 from psycopg2 import Error
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, FileResponse
 
 from database.database import session_factory
 from database.models.users import User, Token
@@ -66,30 +67,28 @@ class UserServiceDB:
                 return -1
 
     def upload_image(self, file, user_id):
-        with session_factory() as session:
-            try:
-                user = session.get(User, user_id)  # Асинхронный запрос к базе данных
+        try:
+            # Сохраняем файл на сервере
+            upload_folder = "uploads/"
+            os.makedirs(upload_folder, exist_ok=True)  # Создание папки, если ее нет
+            file_path = f"{upload_folder}{uuid.uuid4()}"
+
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # Сохраняем путь в базу данных
+            with session_factory() as session:
+                user = session.query(User).filter(User.id == user_id).first()
+
                 if not user:
-                    raise HTTPException(status_code=404, detail="User not found")
+                    raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-                # Генерация уникального имени для файла
-                file_extension = file.filename.split('.')[-1]
-                file_name = f"{uuid.uuid4()}.{file_extension}"
-                file_path = os.path.join(UPLOAD_FOLDER, file_name)
+                user.image_url = file_path
+                session.commit()
 
-                # Асинхронное чтение файла
-                with open(file_path, "wb") as buffer:
-                    content = file.read()
-                    buffer.write(content)
-
-                # Сохраняем URL изображения в базе данных
-                user.image_url = f"/images/{file_name}"
-                session.commit()  # Асинхронный commit
-
-                return JSONResponse(content={"image_url": user.image_url})
-
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
+                return {"url": user.image_url}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при загрузке: {e}")
 
     def get_user_by_token(self, token_id):
         with session_factory() as session:
@@ -198,5 +197,23 @@ class UserServiceDB:
             except(Exception, Error) as err:
                 raise HTTPException(status_code=403,
                                     detail="Непредвиденная ошибка")
+
+    def get_image(self, user_id):
+        try:
+            with session_factory() as session:
+                user = session.query(User).filter(User.id == user_id).first()
+
+                if not user:
+                    raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+                if not user.image_url:
+                    raise HTTPException(status_code=404, detail="Изображение не загружено")
+
+                # Возвращаем изображение
+                return FileResponse(f"{user.image_url}")
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при получении изображения: {e}")
+
 
 user_service_db: UserServiceDB = UserServiceDB()

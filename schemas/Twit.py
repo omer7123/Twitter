@@ -76,6 +76,21 @@ class CommentBaseSchema(pydantic.BaseModel):
         from_attributes = True
 
 
+class CommentBaseRespSchema(pydantic.BaseModel):
+    id: uuid.UUID
+    title: str
+    date: str
+    author_id: uuid.UUID
+    author_name: str
+    author_image: str
+    twit_id: str
+
+
+class CreateComment(pydantic.BaseModel):
+    title: str
+    date: str
+
+
 class TwitGetDetail(pydantic.BaseModel):
     id: uuid.UUID
     title: str
@@ -95,4 +110,3 @@ class TwitGetDetail(pydantic.BaseModel):
 
 class StatusResp(pydantic.BaseModel):
     status: bool
-

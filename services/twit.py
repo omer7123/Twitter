@@ -31,5 +31,10 @@ class TwitService:
         else:
             return StatusResp(status=False)
 
+    def create_comment(self, twit_id, data, access_token):
+        data_token = check_token(access_token)
+        return twit_service_db.create_comment(twit_id, data, data_token['user_id'])
+
+
 twit_service: TwitService = TwitService()
 

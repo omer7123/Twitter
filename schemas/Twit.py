@@ -108,5 +108,9 @@ class TwitGetDetail(pydantic.BaseModel):
         from_attributes = True
 
 
+class LikeSet(pydantic.BaseModel):
+    twit_id: str
+    like: bool
+
 class StatusResp(pydantic.BaseModel):
     status: bool

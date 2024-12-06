@@ -1,7 +1,9 @@
+from array import array
+
 import anyio
 from anyio import from_thread
 from psycopg2 import Error
-from sqlalchemy import create_engine, select, func, distinct
+from sqlalchemy import create_engine, select, func, distinct, text, UUID
 from sqlalchemy.connectors import asyncio
 from sqlalchemy.orm import sessionmaker, joinedload, selectinload, join, DeclarativeBase
 from typing import List, Dict
@@ -16,7 +18,7 @@ from datetime import datetime
 
 from database.models.users import User, Twit, Comment
 from schemas.Twit import CreateTwit, CreateTwitResponse, UserBaseForLikeSchema, TwitBaseSchema, TwitGetDetail, \
-    CommentBaseSchema, CreateComment, CommentBaseRespSchema
+    CommentBaseSchema, CreateComment, CommentBaseRespSchema, LikeSet
 from fastapi.responses import JSONResponse
 
 
@@ -96,10 +98,11 @@ class TwitServiceDB:
                     for comment in twit.comments
                 ]
 
-                liked_db = False
-                if user_id in twit.authors_like:
-                    liked_db = True
 
+                authors_like_uuids = [str(item) for item in twit.authors_like]
+                liked_db = False
+                if user_id in authors_like_uuids:
+                    liked_db = True
 
                 twit_response = TwitGetDetail(
                     id=twit.id,
@@ -130,8 +133,9 @@ class TwitServiceDB:
                     if not user:
                         continue
 
+                    authors_like_uuids = [str(item) for item in twit.authors_like]
                     liked_db = False
-                    if user_id in twit.authors_like:
+                    if user_id in authors_like_uuids:
                         liked_db = True
 
                     twit_schemas.append(
@@ -167,8 +171,9 @@ class TwitServiceDB:
 
                 user_db = session.query(User).filter(User.id == user_id).first()
 
+                authors_like_uuids = [str(item) for item in twit.authors_like]
                 liked_db = False
-                if user_id in twit.authors_like:
+                if user_id in authors_like_uuids:
                     liked_db = True
 
                 twit_resp = TwitBaseSchema(
@@ -215,7 +220,6 @@ class TwitServiceDB:
                 if not twit_db:
                     raise HTTPException(status_code=404, detail="Твит не найден")
 
-
                 user_db = session.query(User).filter(User.id == user_id).first()
                 id = uuid.uuid4()
                 comment_db = Comment(
@@ -240,20 +244,61 @@ class TwitServiceDB:
                     twit_id=twit_id
                 )
 
-                from_thread.run(self.send_notification, twit_db.author_id, twit_id, comment_resp)
+                from_thread.run(self.send_notification,
+                                twit_db.author_id,
+                                twit_id,
+                                f"{str(comment_resp.author_name)} оставил комментарий",
+                                "COMMENT",
+                                f"{str(comment_resp.author_id)}",
+                                comment_resp.title
+                                )
 
                 return comment_resp
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-    async def send_notification(self, author_id, twit_id, comment_resp):
+    def set_like(self, user_id: UUID, twit_id):
+        with session_factory() as session:
+            try:
+                user_db = session.query(User).filter(User.id == user_id).first()
+                if not user_db:
+                    raise HTTPException(status_code=404, detail="Пользователь не найден")
+                twit_db = session.query(Twit).filter(Twit.id == twit_id).first()
+                if not twit_db:
+                    raise HTTPException(status_code=404, detail="Твит не найден")
+
+                authors_like_uuids = [str(item) for item in twit_db.authors_like]
+
+                if user_id in authors_like_uuids:
+                    session.execute(
+                        text("UPDATE twit SET authors_like = array_remove(authors_like, :user_id) WHERE id = :twit_id"),
+                        {"user_id": user_id, "twit_id": twit_id}
+                    )
+
+                else:
+                    session.execute(
+                        text("UPDATE twit SET authors_like = array_append(authors_like, :user_id) WHERE id = :twit_id"),
+                        {"user_id": user_id, "twit_id": twit_id}
+                    )
+                    from_thread.run(self.send_notification, twit_db.author_id, twit_id, f"{str(user_db.username)} поставил лайк", "LIKE", user_id, "")
+
+                session.commit()
+                session.refresh(twit_db)
+                print(twit_db.authors_like)
+                return 0
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    async def send_notification(self, author_id, twit_id, title, type, nav_id, text):
         if author_id in self.connections:
             websocket = self.connections[author_id]
             try:
                 notification = {
-                    "type": "Новый комментарий",
+                    "type": str(type),
                     "twit_id": str(twit_id),
-                    "comment": comment_resp.title
+                    "nav_user_id": str(nav_id),
+                    "title": title,
+                    "text": str(text)
                 }
                 await websocket.send_json(notification)
             except Exception as ws_error:

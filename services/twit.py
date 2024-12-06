@@ -35,6 +35,13 @@ class TwitService:
         data_token = check_token(access_token)
         return twit_service_db.create_comment(twit_id, data, data_token['user_id'])
 
+    def like_set(self, data, access_token):
+        data_token = check_token(access_token)
+        if twit_service_db.set_like(data_token['user_id'], data) == 0:
+            return StatusResp(status=True)
+        else:
+            return StatusResp(status=False)
+
 
 twit_service: TwitService = TwitService()
 
